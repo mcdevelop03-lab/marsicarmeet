@@ -1,6 +1,8 @@
-import { useRef, useEffect, Suspense } from 'react'
+import { useRef, useEffect, useState, Suspense, lazy } from 'react'
 import { motion } from 'framer-motion'
-import CarScene from './CarScene'
+import { useProgress } from '@react-three/drei'
+
+const CarScene = lazy(() => import('./CarScene'))
 
 const tickerItems = [
   'RADUNO NOTTURNO MILANO · 5 LUG',
@@ -11,10 +13,52 @@ const tickerItems = [
   'TOUR COSTIERA AMALFITANA · 10 AGO',
 ]
 
-export default function Hero() {
-  const mouse = useRef({ x: 0, y: 0 })
+function HeroLoader() {
+  const { progress, active } = useProgress()
+  const [visible, setVisible] = useState(true)
+  const [fading, setFading] = useState(false)
 
   useEffect(() => {
+    if (!active && progress === 100) {
+      setFading(true)
+      const timer = setTimeout(() => setVisible(false), 600)
+      return () => clearTimeout(timer)
+    }
+  }, [active, progress])
+
+  if (!visible) return null
+
+  return (
+    <div
+      className="absolute inset-0 z-[5] bg-[#050505] flex flex-col items-center justify-center gap-6 pointer-events-none"
+      style={{ opacity: fading ? 0 : 1, transition: 'opacity 600ms ease' }}
+    >
+      <p className="text-[#ff4500] text-xs font-bold tracking-[0.35em] uppercase">
+        MARSICA R-MEET
+      </p>
+      <div className="w-48 h-0.5 bg-white/10 overflow-hidden">
+        <div
+          className="h-full bg-[#ff4500]"
+          style={{ width: `${progress}%`, transition: 'width 300ms ease' }}
+        />
+      </div>
+      <span className="text-white/30 text-xs tabular-nums">{Math.round(progress)}%</span>
+    </div>
+  )
+}
+
+export default function Hero() {
+  const mouse = useRef({ x: 0, y: 0 })
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+
+  useEffect(() => {
+    if (isMobile) return
     const onMove = (e) => {
       mouse.current = {
         x: (e.clientX / window.innerWidth) * 2 - 1,
@@ -23,26 +67,33 @@ export default function Hero() {
     }
     window.addEventListener('mousemove', onMove)
     return () => window.removeEventListener('mousemove', onMove)
-  }, [])
+  }, [isMobile])
 
   return (
     <section className="relative h-screen w-full overflow-hidden bg-[#050505]">
+
       {/* 3D Canvas */}
       <div className="absolute inset-0">
         <Suspense fallback={<div className="w-full h-full bg-[#050505]" />}>
-          <CarScene mouse={mouse} />
+          <CarScene mouse={mouse} isMobile={isMobile} />
         </Suspense>
       </div>
 
-      {/* Left gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-r from-[#050505] via-[#050505]/55 to-transparent pointer-events-none" />
+      {/* Loading overlay — fades out after model + textures are GPU-flushed */}
+      <HeroLoader />
+
+      {/* Desktop: left-to-right gradient */}
+      <div className="absolute inset-0 bg-gradient-to-r from-[#050505] via-[#050505]/70 to-transparent pointer-events-none hidden sm:block" />
+      {/* Mobile: top-to-bottom gradient */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#050505] via-[#050505]/60 to-transparent pointer-events-none sm:hidden" />
       {/* Bottom gradient */}
       <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent pointer-events-none" />
       {/* Top fade */}
       <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-b from-[#050505] to-transparent pointer-events-none" />
 
       {/* Hero text — left column */}
-      <div className="relative z-10 h-full flex flex-col justify-center px-8 md:px-16 max-w-3xl">
+      <div className="relative z-10 h-full flex flex-col justify-center px-8 md:px-16 max-w-xl">
+
         <motion.p
           initial={{ opacity: 0, x: -40 }}
           animate={{ opacity: 1, x: 0 }}
@@ -56,7 +107,7 @@ export default function Hero() {
           initial={{ opacity: 0, x: -60 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 1, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
-          className="text-7xl md:text-[6.5rem] leading-none tracking-tight mb-6 font-bebas"
+          className="text-6xl md:text-[6.5rem] leading-none tracking-tight mb-6 font-bebas"
         >
           VIVI LA
           <br />
@@ -69,7 +120,7 @@ export default function Hero() {
           initial={{ opacity: 0, x: -40 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.9, delay: 0.75 }}
-          className="text-gray-400 text-base md:text-lg mb-10 max-w-lg leading-relaxed"
+          className="text-gray-400 text-sm md:text-lg mb-10 max-w-lg leading-relaxed"
         >
           Raduni, Car Meet, Track Day e Tour Panoramici.
           <br className="hidden md:block" />
@@ -102,12 +153,12 @@ export default function Hero() {
           </a>
         </motion.div>
 
-        {/* Stats row */}
+        {/* Desktop stats row */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1, delay: 1.3 }}
-          className="mt-14 flex gap-10"
+          className="mt-14 hidden md:flex gap-10"
         >
           {[
             { num: '2.4K+', label: 'Appassionati' },
@@ -120,9 +171,27 @@ export default function Hero() {
             </div>
           ))}
         </motion.div>
+
+        {/* Mobile compact stats */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1, delay: 1.3 }}
+          className="mt-8 flex md:hidden gap-6"
+        >
+          {[
+            { num: '150+', label: 'Auto' },
+            { num: '25+', label: 'Eventi' },
+          ].map(({ num, label }) => (
+            <div key={label}>
+              <div className="text-2xl font-black text-white leading-none">{num}</div>
+              <div className="text-xs text-gray-500 uppercase tracking-widest mt-1">{label}</div>
+            </div>
+          ))}
+        </motion.div>
       </div>
 
-      {/* Event type badges — right side */}
+      {/* Event type badges — right side, desktop only */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -177,6 +246,7 @@ export default function Hero() {
           ))}
         </motion.div>
       </div>
+
     </section>
   )
 }
