@@ -15,8 +15,8 @@ function GltfCar({ isMobile, carX, carRotY }) {
     if (!groupRef.current) return
     const t = state.clock.elapsedTime
 
-    const targetX    = carX    ? carX.get()    : (isMobile ? 0 : 1.2)
-    const targetRotY = carRotY ? carRotY.get() : 0
+    const targetX    = carX    != null ? carX.get()    : (isMobile ? 0 : 1.2)
+    const targetRotY = carRotY != null ? carRotY.get() : 0
 
     // Snap on first frame — prevents position flash on mount
     if (!initialized.current) {
@@ -36,7 +36,7 @@ function GltfCar({ isMobile, carX, carRotY }) {
   return (
     <group
       ref={groupRef}
-      position={[isMobile ? 0 : -12, -0.9, 0]}
+      position={[carX != null ? (isMobile ? 0 : -12) : (isMobile ? 0 : 1.2), -0.9, 0]}
       scale={isMobile ? 1.0 : 1.35}
     >
       <primitive object={scene} />
