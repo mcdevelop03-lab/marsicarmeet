@@ -4,10 +4,11 @@ import { useGLTF, Stars, Environment, ContactShadows } from '@react-three/drei'
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing'
 import * as THREE from 'three'
 
-useGLTF.preload('/models/nissan-gtr.glb')
+// TEMP: model file missing from repo — preload/load disabled until nissan-gtr.glb is restored
+// useGLTF.preload('/models/nissan-gtr.glb')
 
 function GltfCar({ isMobile, carX, carRotY }) {
-  const { scene } = useGLTF('/models/nissan-gtr.glb')
+  // const { scene } = useGLTF('/models/nissan-gtr.glb')
   const groupRef = useRef()
   const initialized = useRef(false)
 
@@ -39,7 +40,11 @@ function GltfCar({ isMobile, carX, carRotY }) {
       position={[carX != null ? (isMobile ? 0 : -12) : (isMobile ? 0 : 1.2), -0.9, 0]}
       scale={isMobile ? 1.0 : 1.35}
     >
-      <primitive object={scene} />
+      {/* TEMP placeholder — swap back to <primitive object={scene} /> once nissan-gtr.glb is restored */}
+      <mesh position={[0, 0.5, 0]} castShadow>
+        <boxGeometry args={[4.5, 1.2, 2]} />
+        <meshStandardMaterial color="#444444" metalness={0.6} roughness={0.4} />
+      </mesh>
     </group>
   )
 }

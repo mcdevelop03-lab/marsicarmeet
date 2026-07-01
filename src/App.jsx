@@ -1,6 +1,7 @@
 import Navbar from './components/Navbar'
 import HeroText from './components/HeroText'
-import CarShowcase from './components/CarShowcase'
+// TEMP: 3D car animation disabled — nissan-gtr.glb model missing from repo
+// import CarShowcase from './components/CarShowcase'
 import EventsSection from './components/EventsSection'
 import MapSection from './components/MapSection'
 import CalendarSection from './components/CalendarSection'
@@ -12,7 +13,7 @@ export default function App() {
     <div className="bg-[#050505] text-white overflow-x-hidden">
       <Navbar />
       <HeroText />
-      <CarShowcase />
+      {/* <CarShowcase /> */}
       <EventsSection />
       <MapSection />
       <CalendarSection />
